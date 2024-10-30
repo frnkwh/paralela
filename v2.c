@@ -8,16 +8,18 @@
 #define MAX_TOTAL_ELEMENTS (1000 * 1000 * 16)
 
 typedef struct {
+        long long target;
+        long long *result;
+        int index;
         long long *inputArray;
-        long long *searchArray;
-        long long *resultsArray;
         int nTotalElements;
-        int nSearchElements;
-        int startIndex;
-        int endIndex;
 } SearchTask;
 
 pthread_t Thread[MAX_THREADS];
+long long operation_count = 0;
+pthread_mutex_t count_mutex;
+int nThreads;
+int nTotalElements;
 
 long long *createArray(int size) {
         long long *newArr = malloc(sizeof(long long) * size);
@@ -31,36 +33,38 @@ int compare(const void *a, const void *b) {
 
 void *bsearch_lower_bound_task(void *arg) {
         SearchTask *task = (SearchTask *)arg;
+        long long target = task->target;
+        long long left = 0, right = task->nTotalElements;
 
-        for (int i = task->startIndex; i < task->endIndex; i++) {
-                long long target = task->searchArray[i];
-                long long left = 0, right = task->nTotalElements;
+        while (left < right) {
+                int mid = left + (right - left) / 2;
+                pthread_mutex_lock(&count_mutex);
+                operation_count++;
+                pthread_mutex_unlock(&count_mutex);
 
-                while (left < right) {
-                        int mid = left + (right - left) / 2;
-
-                        if (task->inputArray[mid] < target) {
-                                left = mid + 1;
-                        } else {
-                                right = mid;
-                        }
+                if (task->inputArray[mid] < target) {
+                        left = mid + 1;
+                } else {
+                        right = mid;
                 }
-
-                task->resultsArray[i] = left; // Armazenar o resultado da busca
         }
 
+        task->result[task->index] = left;
         free(task);
         return NULL;
 }
 
 int main(int argc, char *argv[]) {
+
+        srand(time(NULL));
+
         if (argc != 3) {
                 printf("usage: %s <nTotalElements> <nThreads>\n", argv[0]);
                 return 0;
         }
 
-        int nTotalElements = atoi(argv[1]);
-        int nThreads = atoi(argv[2]);
+        nTotalElements = atoi(argv[1]);
+        nThreads = atoi(argv[2]);
         if (nThreads > MAX_THREADS) {
                 printf("<nThreads> must be less than %d\n", MAX_THREADS);
                 return 0;
@@ -79,27 +83,37 @@ int main(int argc, char *argv[]) {
 
         qsort(inputArray, nTotalElements, sizeof(long long), compare);
 
-        int blockSize = (SEARCH_ELEMENTS + nThreads - 1) / nThreads; // Tamanho do bloco
+        for (int i = 0; i < nTotalElements; i++) {
+                printf("%lld ", inputArray[i]);
+        }
+        printf("\n");
+
+
+
+
         for (int i = 0; i < nThreads; i++) {
                 SearchTask *task = malloc(sizeof(SearchTask));
+                task->target = searchArray[i];
+                task->result = resultsArray;
+                task->index = i;
                 task->inputArray = inputArray;
-                task->searchArray = searchArray;
-                task->resultsArray = resultsArray;
                 task->nTotalElements = nTotalElements;
-                task->nSearchElements = SEARCH_ELEMENTS;
-                task->startIndex = i * blockSize;
-                task->endIndex = (i + 1) * blockSize < SEARCH_ELEMENTS ? (i + 1) * blockSize : SEARCH_ELEMENTS;
 
-                pthread_create(&Thread[i], NULL, bsearch_lower_bound_task, task);
+                if (pthread_create(&Thread[i], NULL, bsearch_lower_bound_task, task) != 0) {
+                        perror("Failed to create thread");
+                        free(task);
+                        return 1;
+                }
         }
 
         for (int i = 0; i < nThreads; i++) {
                 pthread_join(Thread[i], NULL);
         }
 
-        //for (int i = 0; i < SEARCH_ELEMENTS; i++) {
-        //        printf("Insertion point for %lld is %lld\n", searchArray[i], resultsArray[i]);
-        //}
+        // Aqui você pode imprimir os resultados ou fazer o que precisar com `resultsArray`.
+        for (int i = 0; i < nThreads; i++) {
+                printf("Insertion point for %lld is %lld\n", searchArray[i], resultsArray[i]);
+        }
 
         free(inputArray);
         free(searchArray);
