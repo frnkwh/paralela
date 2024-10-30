@@ -21,15 +21,8 @@
 
 #include <time.h>
 
+#include "chrono.h"
 
-  typedef struct {
-
-     struct timespec xadd_time1, xadd_time2;
-     long long xtotal_ns;
-     long xn_events;
-    
-  } chronometer_t;
- 
 
   void chrono_reset( chronometer_t *chrono )
   {

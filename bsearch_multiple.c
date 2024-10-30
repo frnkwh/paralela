@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include "chrono.h"
 
 #define MAX_THREADS 64
 
@@ -10,12 +11,13 @@ typedef struct {
         long long target;
         int *result;
         int index;
+        long long *inputArray;
+        int nElements;
 } SearchTask;
 
 pthread_t threads[MAX_THREADS];
-long long *inputArray;
-int nElements;
-
+long long operation_count = 0; // Contador global de operações
+pthread_mutex_t count_mutex; // Mutex para proteger o contador
 
 int compare(const void *a, const void *b) {
         return (*(long long *)a - *(long long *)b);
@@ -24,94 +26,90 @@ int compare(const void *a, const void *b) {
 void *bsearch_lower_bound_task(void *arg) {
         SearchTask *task = (SearchTask *)arg;
         long long target = task->target;
-        int left = 0, right = nElements;
-
-        printf("Thread %lu started for target %lld\n", pthread_self(), target); // Log thread ID and target
+        long long left = 0, right = task->nElements;
 
         while (left < right) {
                 int mid = left + (right - left) / 2;
-                if (inputArray[mid] < target) {
+
+                // Incrementa o contador de operações
+                pthread_mutex_lock(&count_mutex);
+                operation_count++; // Contar a operação
+                pthread_mutex_unlock(&count_mutex);
+
+                if (task->inputArray[mid] < target) {
                         left = mid + 1;
                 } else {
                         right = mid;
                 }
         }
 
-        task->result[task->index] = left; // Store the result
-        long long foundIndex = left;
-        printf("Thread %lu finished for target %lld, found index %d\n", pthread_self(), target, foundIndex); // Log result
+        task->result[task->index] = left; // Armazenar o resultado
+        free(task); // Liberar memória da tarefa
         return NULL;
 }
 
 void generate_sorted_array(long long *array, int size) {
         for (int i = 0; i < size; i++) {
-                array[i] = rand() % (size * 10); // Random values
+                array[i] = rand() % (size * 10); // Valores aleatórios
         }
-        // Sort the array
         qsort(array, size, sizeof(long long), compare);
-
-       // printf("\n");
-       // for (int i = 0; i < size; i++)
-       //         printf("%lld ", array[i]);
-
-       // printf("\n");
 }
 
+long long *allocArray(long long size) {
+        return malloc(sizeof(long long) * size);
+}
 
-int main(int argc, char *argv[]) {
+int main() {
+        chronometer_t parallelReductionTime;
+        pthread_mutex_init(&count_mutex, NULL); // Inicializa o mutex
 
-    chronometer_t parallelReductionTime;
+        int nElements, nTargets;
+        scanf("%d %d", &nElements, &nTargets);
 
-        if (argc < 3) {
-                printf("Usage: %s <nElements> <target1> <target2> ...\n", argv[0]);
-                return 1;
-        }
-
-
-        nElements = atoi(argv[1]);
-        int nTargets = argc - 2;
+        long long *inputArray = allocArray(nElements);
         long long targets[nTargets];
         int results[nTargets];
 
-        // Allocate and generate the sorted input array
-        inputArray = malloc(nElements * sizeof(long long));
-        srand(time(NULL)); // Seed for randomness
+        srand(time(NULL));
         generate_sorted_array(inputArray, nElements);
 
-        // Fill targets from command line arguments
         for (int i = 0; i < nTargets; i++) {
-                targets[i] = atoll(argv[i + 2]);
+                scanf("%lld", &targets[i]);
         }
 
-    chrono_reset( &parallelReductionTime );
-    chrono_start( &parallelReductionTime );
-        // Create threads for each target
+        chrono_reset(&parallelReductionTime);
+        chrono_start(&parallelReductionTime);
+
         for (int i = 0; i < nTargets; i++) {
                 SearchTask *task = malloc(sizeof(SearchTask));
                 task->target = targets[i];
                 task->result = results;
                 task->index = i;
+                task->inputArray = inputArray; // Passa o vetor de entrada
+                task->nElements = nElements;     // Passa o número de elementos
                 pthread_create(&threads[i], NULL, bsearch_lower_bound_task, task);
         }
 
-        // Wait for all threads to finish
         for (int i = 0; i < nTargets; i++) {
                 pthread_join(threads[i], NULL);
         }
 
-    chrono_stop( &parallelReductionTime );
+        chrono_stop(&parallelReductionTime);
 
-        // Output the results
         for (int i = 0; i < nTargets; i++) {
                 printf("Insertion point for %lld is %d\n", targets[i], results[i]);
         }
 
-    chrono_reportTime( &parallelReductionTime, "parallelReductionTime" );
+        double total_time_in_seconds = (double)chrono_gettotal(&parallelReductionTime) / 1e9; // Converte ns para segundos
+        double ops_per_second = (double)operation_count / total_time_in_seconds; // Calcula operações por segundo
 
-            double total_time_in_seconds = (double) chrono_gettotal( &parallelReductionTime ) /
-                                      ((double)1000*1000*1000);
-
+        printf("Total time taken: %.6f seconds\n", total_time_in_seconds);
+        printf("Total operations: %lld\n", operation_count);
+        printf("Vazão (operações por segundo): %.2f OPS\n", ops_per_second);
 
         free(inputArray);
+        pthread_mutex_destroy(&count_mutex); // Destrói o mutex
+
         return 0;
 }
+
