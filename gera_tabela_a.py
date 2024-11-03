@@ -22,7 +22,7 @@ for size in array_sizes:
             # Run the external program (replace 'your_program' with the actual command)
             # Capture the output
             result = subprocess.run(
-                ['./bsearch', str(size), str(threads)],
+                ['./bsearch_single', str(size), str(threads)],
                 capture_output=True,
                 text=True
             )
