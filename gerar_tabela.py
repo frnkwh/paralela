@@ -1,6 +1,7 @@
 import subprocess
 import csv
 import time
+from datetime import datetime
 
 # Parameters
 array_sizes = [1_000_000, 2_000_000, 4_000_000, 8_000_000, 16_000_000]
@@ -21,23 +22,25 @@ for size in array_sizes:
             # Run the external program (replace 'your_program' with the actual command)
             # Capture the output
             result = subprocess.run(
-                ['your_program', str(threads), str(size)],
+                ['./bsearch', str(size), str(threads)],
                 capture_output=True,
                 text=True
             )
             
             # Assuming the output contains time and operations per second
             output_lines = result.stdout.strip().split('\n')
-            execution_time = float(output_lines[0].split()[0])  # Assuming first line has time
-            operations_per_second = float(output_lines[1].split()[0])  # Assuming second line has operations
+            # execution_time = float(output_lines[0].split()[0])  # Assuming first line has time
+            execution_time = float(output_lines[0])  # Assuming first line has time
+            # operations_per_second = float(output_lines[1].split()[0])  # Assuming second line has operations
+            operations_per_second = float(output_lines[1])  # Assuming second line has operations
             
             # Accumulate results
             total_time += execution_time
             total_operations += operations_per_second
         
         # Average results
-        avg_time = total_time / iterations
-        avg_operations = total_operations / iterations
+        avg_time = f"{total_time / iterations:.5f}"
+        avg_operations = f"{total_operations / iterations:.2f}"
         
         # Save to results
         results.append({
@@ -48,7 +51,8 @@ for size in array_sizes:
         })
 
 # Write results to CSV
-with open('benchmark_results.csv', 'w', newline='') as csvfile:
+formatted_time = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+with open(f'benchmark_results_{formatted_time}.csv', 'w', newline='') as csvfile:
     fieldnames = ['Array Size', 'Threads', 'Avg Time (s)', 'Avg Ops/sec']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     

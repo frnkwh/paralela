@@ -134,9 +134,12 @@ int main(int argc, char *argv[]) {
         double total_time_in_seconds = (double)chrono_gettotal(&parallelReductionTime) / 1e9; // Converte ns para segundos
         double ops_per_second = (double)operation_count / total_time_in_seconds; // Calcula operações por segundo
 
-        printf("Total time taken: %.6f seconds\n", total_time_in_seconds);
-        printf("Total operations: %lld\n", operation_count);
-        printf("Vazão (operações por segundo): %.2f OPS\n", ops_per_second);
+        //printf("Total time taken: %.6f seconds\n", total_time_in_seconds);
+        //printf("Total operations: %lld\n", operation_count);
+        //printf("Vazão (operações por segundo): %.2f OPS\n", ops_per_second);
+        printf("%.6f\n", total_time_in_seconds);
+        printf("%.2f\n", ops_per_second);
+
 
         //for (int i = 0; i < SEARCH_ELEMENTS; i++) {
         //        printf("Insertion point for %lld is %lld\n", searchArray[i], resultsArray[i]);
