@@ -18,6 +18,8 @@ grouped_df = df.groupby('Threads', as_index=False).agg({
     'Avg Ops/sec': 'mean'
 })
 
+print(grouped_df)
+
 # Plot and save Avg Time (s)
 plt.figure(figsize=(10, 5))
 plt.plot(grouped_df['Threads'], grouped_df['Avg Time (s)'], marker='o', color='b')
