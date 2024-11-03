@@ -14,70 +14,49 @@ typedef struct {
     long long *result;
     int nTotalElements;
     int nThreads;
-    int targetIndex; // Index of the target in searchArray
-    int currentStep; // Current binary search step
+    int targetIndex; // Índice do alvo no searchArray
+    int thread_id;   // ID da thread atual
 } SearchTask;
 
 pthread_t threads[MAX_THREADS];
-pthread_barrier_t myBarrier;
 pthread_mutex_t count_mutex;
 
 long long operation_count = 0;
 
 void *parallel_bsearch(void *arg) {
     SearchTask *task = (SearchTask *)arg;
-    int thread_id = task->currentStep;
-
     int nTotalElements = task->nTotalElements;
     int nThreads = task->nThreads;
     long long *inputArray = task->inputArray;
     long long target = task->searchArray[task->targetIndex];
 
-    long long local_operation_count = 0;
     int segment_size = nTotalElements / nThreads;
+    int local_left = task->thread_id * segment_size;
+    int local_right = (task->thread_id == nThreads - 1) ? nTotalElements : local_left + segment_size;
 
-    long long left = 0, right = nTotalElements;
+    int local_operation_count = 0;
+    int found_index = -1;
 
-    while (left < right) {
-        
-        // Define each thread's search segment
-        int local_left = left + thread_id * segment_size;
-        int local_right = local_left + segment_size;
-
-        // Adjust the bounds to fit within the search range
-        if (local_right > right) local_right = right;
-        
-        // Each thread checks the midpoint of its segment
+    // Cada thread realiza a busca binária no seu próprio segmento
+    while (local_left < local_right) {
         int mid = local_left + (local_right - local_left) / 2;
-
         local_operation_count++;
-        
-        // Check if the current segment's midpoint value is less than target
-        if (inputArray[mid] < target) {
+
+        if (inputArray[mid] == target) {
+            found_index = mid; // Armazena o índice local onde o valor foi encontrado
+            break;
+        } else if (inputArray[mid] < target) {
             local_left = mid + 1;
         } else {
             local_right = mid;
         }
-
-        // Synchronize threads to share updated bounds
-        pthread_barrier_wait(&myBarrier);
-        
-        // Determine global bounds based on the threads' findings
-        if (thread_id == 0) {
-            // Thread 0 calculates new global bounds by finding the minimum left and maximum right
-            left = local_left;
-            right = local_right;
-            for (int i = 1; i < nThreads; i++) {
-                left = (left > local_left) ? local_left : left;
-                right = (right < local_right) ? local_right : right;
-            }
-        }
-
-        pthread_barrier_wait(&myBarrier);
     }
 
-    if (thread_id == 0) {
-        task->result[task->targetIndex] = left; // Store the result only once
+    // Só uma thread atualizará o resultado global se encontrar o alvo
+    if (found_index != -1) {
+        pthread_mutex_lock(&count_mutex);
+        task->result[task->targetIndex] = found_index;
+        pthread_mutex_unlock(&count_mutex);
     }
 
     pthread_mutex_lock(&count_mutex);
@@ -110,6 +89,7 @@ int main(int argc, char *argv[]) {
     long long *searchArray = malloc(sizeof(long long) * SEARCH_ELEMENTS);
     long long *resultsArray = malloc(sizeof(long long) * SEARCH_ELEMENTS);
 
+    // Inicialização do array com valores aleatórios e ordenação
     for (int i = 0; i < nTotalElements; i++) {
         inputArray[i] = rand() % nTotalElements;
     }
@@ -120,31 +100,28 @@ int main(int argc, char *argv[]) {
     qsort(inputArray, nTotalElements, sizeof(long long), compare);
 
     pthread_mutex_init(&count_mutex, NULL);
-    pthread_barrier_init(&myBarrier, NULL, nThreads);
 
     chrono_reset(&parallelReductionTime);
     chrono_start(&parallelReductionTime);
 
     for (int i = 0; i < SEARCH_ELEMENTS; i++) {
-        SearchTask *task = malloc(sizeof(SearchTask));
-        task->inputArray = inputArray;
-        task->searchArray = searchArray;
-        task->result = resultsArray;
-        task->nTotalElements = nTotalElements;
-        task->nThreads = nThreads;
-        task->targetIndex = i;
+        SearchTask task;
+        task.inputArray = inputArray;
+        task.searchArray = searchArray;
+        task.result = resultsArray;
+        task.nTotalElements = nTotalElements;
+        task.nThreads = nThreads;
+        task.targetIndex = i;
 
-        // Start nThreads to work together on each search element
+        // Lançamento de threads para realizar buscas paralelas
         for (int j = 0; j < nThreads; j++) {
-            task->currentStep = j;
-            pthread_create(&threads[j], NULL, parallel_bsearch, task);
+            task.thread_id = j;
+            pthread_create(&threads[j], NULL, parallel_bsearch, &task);
         }
 
         for (int j = 0; j < nThreads; j++) {
             pthread_join(threads[j], NULL);
         }
-
-        free(task);
     }
 
     chrono_stop(&parallelReductionTime);
@@ -152,10 +129,9 @@ int main(int argc, char *argv[]) {
     double total_time_in_seconds = (double)chrono_gettotal(&parallelReductionTime) / 1e9;
     double ops_per_second = (double)operation_count / total_time_in_seconds;
 
-    printf("%.6f\n", total_time_in_seconds);
-    printf("%.2f\n", ops_per_second);
+    printf("Tempo total: %.6f segundos\n", total_time_in_seconds);
+    printf("Operações por segundo: %.2f\n", ops_per_second);
 
-    pthread_barrier_destroy(&myBarrier);
     pthread_mutex_destroy(&count_mutex);
 
     free(inputArray);
