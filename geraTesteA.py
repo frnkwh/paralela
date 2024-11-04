@@ -19,13 +19,14 @@ for size in array_sizes:
             
             # Run the external program (replace 'your_program' with the actual command)
             result = subprocess.run(
-                ['./bsearch_multiple', str(size), str(threads)],
+                ['./bsearch_single', str(size), str(threads)],
                 capture_output=True,
                 text=True
             )
             
             # Assuming the output contains time and operations per second
             output_lines = result.stdout.strip().split('\n')
+            print(f"iteration = {iteration}, size = {size}:{output_lines}")
             execution_time = float(output_lines[0])  # Assuming first line has time
             operations_per_second = float(output_lines[1])  # Assuming second line has operations
             
