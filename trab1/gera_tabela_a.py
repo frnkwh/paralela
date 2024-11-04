@@ -6,7 +6,7 @@ from datetime import datetime
 # Parameters
 array_sizes = [1_000_000, 2_000_000, 4_000_000, 8_000_000, 16_000_000]
 thread_counts = range(1, 9)  # From 1 to 8
-iterations = 10
+iterations = 1
 
 # Results list
 results = []
@@ -22,13 +22,14 @@ for size in array_sizes:
             # Run the external program (replace 'your_program' with the actual command)
             # Capture the output
             result = subprocess.run(
-                ['./bsearch_multiple', str(size), str(threads)],
+                ['./bsearch_single', str(size), str(threads)],
                 capture_output=True,
                 text=True
             )
             
             # Assuming the output contains time and operations per second
             output_lines = result.stdout.strip().split('\n')
+            print(output_lines)
             # execution_time = float(output_lines[0].split()[0])  # Assuming first line has time
             execution_time = float(output_lines[0])  # Assuming first line has time
             # operations_per_second = float(output_lines[1].split()[0])  # Assuming second line has operations
@@ -52,7 +53,7 @@ for size in array_sizes:
 
 # Write results to CSV
 formatted_time = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-with open(f'benchmark_results_B_{formatted_time}.csv', 'w', newline='') as csvfile:
+with open(f'benchmark_results_A_{formatted_time}.csv', 'w', newline='') as csvfile:
     fieldnames = ['Array Size', 'Threads', 'Avg Time (s)', 'Avg Ops/sec']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     

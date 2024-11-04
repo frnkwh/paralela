@@ -52,7 +52,7 @@ for size in array_sizes:
 
 # Write results to CSV
 formatted_time = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-with open(f'benchmark_results_{formatted_time}.csv', 'w', newline='') as csvfile:
+with open(f'benchmark_results_A_{formatted_time}.csv', 'w', newline='') as csvfile:
     fieldnames = ['Array Size', 'Threads', 'Avg Time (s)', 'Avg Ops/sec']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     
