@@ -14,8 +14,8 @@ typedef struct {
     long long *result;
     int nTotalElements;
     int nThreads;
-    int targetIndex; // Índice do alvo no searchArray
-    int thread_id;   // ID da thread atual
+    int targetIndex;
+    int thread_id;
 } SearchTask;
 
 pthread_t threads[MAX_THREADS];
@@ -37,13 +37,12 @@ void *parallel_bsearch(void *arg) {
     int local_operation_count = 0;
     int found_index = -1;
 
-    // Cada thread realiza a busca binária no seu próprio segmento
     while (local_left < local_right) {
         int mid = local_left + (local_right - local_left) / 2;
         local_operation_count++;
 
         if (inputArray[mid] == target) {
-            found_index = mid; // Armazena o índice local onde o valor foi encontrado
+            found_index = mid;
             break;
         } else if (inputArray[mid] < target) {
             local_left = mid + 1;
@@ -52,7 +51,6 @@ void *parallel_bsearch(void *arg) {
         }
     }
 
-    // Só uma thread atualizará o resultado global se encontrar o alvo
     if (found_index != -1) {
         pthread_mutex_lock(&count_mutex);
         task->result[task->targetIndex] = found_index;
@@ -89,7 +87,6 @@ int main(int argc, char *argv[]) {
     long long *searchArray = malloc(sizeof(long long) * SEARCH_ELEMENTS);
     long long *resultsArray = malloc(sizeof(long long) * SEARCH_ELEMENTS);
 
-    // Inicialização do array com valores aleatórios e ordenação
     for (int i = 0; i < nTotalElements; i++) {
         inputArray[i] = rand() % nTotalElements;
     }
@@ -113,7 +110,6 @@ int main(int argc, char *argv[]) {
         task.nThreads = nThreads;
         task.targetIndex = i;
 
-        // Lançamento de threads para realizar buscas paralelas
         for (int j = 0; j < nThreads; j++) {
             task.thread_id = j;
             pthread_create(&threads[j], NULL, parallel_bsearch, &task);
