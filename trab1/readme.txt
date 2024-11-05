@@ -2,6 +2,16 @@ Para compilar o programa deve ser rodado o 'make' no diretório corrente.
 Se quiser compilar apenas o executável da parte A (chamado de bsearch_single)
 'make a' e da parte B (chamado de bsearch_multiple) 'make b'.
 
+Para rodar o código, siga as instruções abaixo:
+
+ Parte A:
+  ./bsearch_single input (tamanho do vetor de input) nThreads (numero de threads)
+
+ Parte B:
+  ./bsearch_multiple input (tamanho do vetor de input) nThreads (numero de threads)
+
+Em ambas as partes, substitua input pelo nome do arquivo ou caminho do vetor de entrada, (tamanho do vetor de input) pelo tamanho do vetor a ser processado, e nThreads pelo número de threads que deseja utilizar.
+
 Os scripts criados foram:
  - gera_tabela_a.py: roda o programa para cada caso de teste exigido (de 1
  a 8 threads para os tamanhos 1, 2, 4, 8 e 16 milhões) e gera uma tabela em
