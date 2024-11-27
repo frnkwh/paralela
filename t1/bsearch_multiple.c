@@ -6,7 +6,7 @@
 
 #define MAX_THREADS 64
 #define SEARCH_ELEMENTS 100000
-#define MAX_TOTAL_ELEMENTS 16000000
+#define MAX_TOTAL_ELEMENTS 8000000
 
 typedef struct {
     long long *searchArray;
