@@ -5,6 +5,19 @@
 #define INPUT_SIZE 16000000
 #define N_PART 1000
 
+int cmp_long_long(const void *a, const void *b) {
+    long long x = *(const long long *)a;
+    long long y = *(const long long *)b;
+
+    if (x < y) {
+        return -1;
+    } else if (x > y) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 
 int *alocarVetorInt(int size) {
         int *arr = malloc(sizeof(int) * size);
@@ -45,6 +58,30 @@ int busca_binaria(long long *p, int np, long long value) {
         return inicio;
 }
 
+void verifica_particoes(long long *input, int n, long long *p, int np, long long *output, int *pos) {
+        int erro = 0;
+
+        for (int i = 0; i < np; i++) {
+                int start = pos[i];
+                int end = (i == np - 1) ? n : pos[i + 1];
+
+                //if ((i > 0 && output[j] < p[i - 1]) || output[j] >= p[i]) {
+
+                for (int j = start; j < end; j++) {
+                        if ((i == 0 && output[j] >= p[i]) || (i > 0 && (output[j] < p[i - 1] || output[j] >= p[i]))) {
+                                printf("Erro: Elemento %lld na posição %d está fora da faixa [%lld, %lld)\n",
+                                        output[j], j, (i > 0 ? p[i - 1] : 0), p[i]);
+
+                                printf("===> particionamento COM ERROS\n");
+                                return;
+                        }
+
+                }
+        }
+        printf("===> particionamento SEM ERROS\n");
+}
+
+
 void multi_partition(long long *input, int n, long long *p, int np, long long *output, int *pos) {
         // Inicializar o vetor pos com 0
         for (int i = 0; i < np; i++) {
@@ -70,7 +107,7 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
         }
 
         // preencher o vetor de saída
-        int faixa_index[np];
+        int *faixa_index = alocarVetorInt(np);
         for (int i = 0; i < np; i++) {
                 faixa_index[i] = pos[i];
         }
@@ -79,7 +116,8 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
                 int faixa = busca_binaria(p, np, input[i]);
                 output[faixa_index[faixa]++] = input[i];
         }
-        
+
+        free(faixa_index);
         free(faixa_count);
 }
 
@@ -102,29 +140,38 @@ int main() {
 
         int n = INPUT_SIZE;
         int np = N_PART;
- 
-        for (int i = 0; i < INPUT_SIZE; i++) {
+
+        for (int i = 0; i < n ; i++) {
                 input[i] = geraAleatorioLL();
         }
-        for (int i = 0; i < N_PART; i++) {
+        for (int i = 0; i < np - 1; i++) {
                 p[i] = geraAleatorioLL();
         }
+
+        qsort(p, np, sizeof(long long), cmp_long_long);
+        
+        p[np - 1] = LLONG_MAX;
+
         printf("vetores aleatorios\n");
 
-        multi_partition(input, n, p, np, output, pos);
+        for (int i = 0; i < 10; i++) {
+
+                multi_partition(input, n, p, np, output, pos);
+        }
 
         // Imprimir os vetores de saída
-        printf("output: ");
-        for (int i = 0; i < n; i++) {
-                printf("%lld ", output[i]);
-        }
-        printf("\n");
+        //printf("output: ");
+        //for (int i = 0; i < n; i++) {
+        //        printf("%lld ", output[i]);
+        //}
+        //printf("\n");
 
-        printf("pos: ");
-        for (int i = 0; i < np; i++) {
-                printf("%d ", pos[i]);
-        }
-        printf("\n");
+        //printf("pos: ");
+        //for (int i = 0; i < np; i++) {
+        //        printf("%d ", pos[i]);
+        //}
+        //printf("\n");
+        verifica_particoes(input, n, p, np, output, pos);
 
         free(input);
         free(output);
