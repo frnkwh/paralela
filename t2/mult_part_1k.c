@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 #include <pthread.h>
 #include <stdatomic.h>
@@ -7,7 +8,8 @@
 
 #define INPUT_SIZE 8000000
 #define N_PART 100000
-#define N_TIMES 1
+#define N_TIMES 5
+#define CACHE_REPS 32
 
 pthread_barrier_t myBarrier;  // Global barrier
 
@@ -68,8 +70,6 @@ void verifica_particoes(long long *input, int n, long long *p, int np, long long
         for (int i = 0; i < np; i++) {
                 int start = pos[i];
                 int end = (i == np - 1) ? n : pos[i + 1];
-
-                //if ((i > 0 && output[j] < p[i - 1]) || output[j] >= p[i]) {
 
                 for (int j = start; j < end; j++) {
                         if ((i == 0 && output[j] >= p[i]) || (i > 0 && (output[j] < p[i - 1] || output[j] >= p[i]))) {
@@ -142,7 +142,7 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
         pthread_t threads[num_threads];
         ThreadData thread_data[num_threads];
 
-         // Initialize the barrier to synchronize the threads
+        // Initialize the barrier to synchronize the threads
         pthread_barrier_init(&myBarrier, NULL, num_threads);
 
 
@@ -164,24 +164,16 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
 
 
 int main(int argc, char *argv[]) {
-        srand(69);
+
+        srand(33);
+
         double meps;
-        //long long input[14] = {8, 4, 13, 7, 11, 100, 44, 3, 7, 7, 100, 110, 46, 44};
-        ////{8, 4, 7, 11, 3, 7, 7, 13, 44, 46, 44, 100, 100, 110}    
-
-        ////{7,4,0,3}
-        //// {0, 7, 11, 11}
-
-        //long long p[4] = {12, 70, 90, LLONG_MAX};
-        //long long output[14] = {0};
-        //int pos[4] = {0}; //             int n = 14, np = 4;
 
         long long *input = alocarVetorLL(INPUT_SIZE);
-        long long *p = alocarVetorLL(N_PART);
+        long long *p = alocarVetorLL(N_PART * CACHE_REPS);
         long long *output = alocarVetorLL(INPUT_SIZE);
 
         int *pos = alocarVetorInt(N_PART);
-        printf("vetores al\n");
 
         int n = INPUT_SIZE;
         int np = N_PART;
@@ -193,21 +185,28 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < n ; i++) {
                 input[i] = geraAleatorioLL();
         }
+
         for (int i = 0; i < np - 1; i++) {
                 p[i] = geraAleatorioLL();
         }
-
+        p[np - 1] = LLONG_MAX;
         qsort(p, np, sizeof(long long), cmp_long_long);
 
-        p[np - 1] = LLONG_MAX;
-
-        printf("vetores aleatorios\n");
-
+        for (int i = 0; i < CACHE_REPS; i++) {
+                memcpy(p + i * np, p, np * sizeof(*p));
+        }
 
         chrono_reset(&parallelMultiPartitionTime);
         chrono_start(&parallelMultiPartitionTime);
 
-        multi_partition(input, n, p, np, output, pos, num_threads);
+        int shift = 0;
+        long long *tmp_p = p;
+        for (int i = 0; i < N_TIMES; i++) {
+                multi_partition(input, n, tmp_p, np, output, pos, num_threads);
+                verifica_particoes(input, n, tmp_p, np, output, pos);
+
+                tmp_p += np;
+        }
 
         chrono_stop(&parallelMultiPartitionTime);
 
@@ -216,28 +215,12 @@ int main(int argc, char *argv[]) {
         printf("MEPS: %lf\n", meps);
 
         chrono_reportTime(&parallelMultiPartitionTime, "multiPartitionTime");
-
         printf("%.6f\n", total_time_in_seconds);
 
-
-        // Imprimir os vetores de saída
-        //printf("output: ");
-        //for (int i = 0; i < n; i++) {
-        //        printf("%lld ", output[i]);
-        //}
-        //printf("\n");
-
-        //printf("pos: ");
-        //for (int i = 0; i < np; i++) {
-        //        printf("%d ", pos[i]);
-        //}
-        //printf("\n");
-        verifica_particoes(input, n, p, np, output, pos);
-
         free(input);
-        free(output); free(p);
+        free(output);
+        free(p);
         free(pos);
 
         return 0;
 }
-
