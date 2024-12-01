@@ -1,32 +1,29 @@
 CC = gcc
 CFLAGS = -Wall -pthread
 SOURCES_COMMON = chrono.c
+SOURCE_MAIN = mult_part.c
 
-TARGET_B = multpart-1k
-SOURCES_B = mult_part_1k.c $(SOURCES_COMMON)
-OBJECTS_B = $(SOURCES_B:.c=.o)
+TARGET_A = multpart-1k
+TARGET_B = multpart-100k
 
-TARGET_A = multpart-100k
-SOURCES_A = mult_part_100k.c $(SOURCES_COMMON)
-OBJECTS_A = $(SOURCES_A:.c=.o)
+OBJECTS_COMMON = $(SOURCES_COMMON:.c=.o)
 
 all: $(TARGET_B) $(TARGET_A)
 
-b: $(TARGET_B)
-
-$(TARGET_B): $(OBJECTS_B)
-	$(CC) -o $@ $^
-
 a: $(TARGET_A)
 
-$(TARGET_A): $(OBJECTS_A)
-	$(CC) -o $@ $^
+b: $(TARGET_B)
+
+$(TARGET_A): $(SOURCE_MAIN) $(OBJECTS_COMMON)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS_COMMON) $(SOURCE_MAIN) -D N_PART=1000
+
+$(TARGET_B): $(SOURCE_MAIN) $(OBJECTS_COMMON)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS_COMMON) $(SOURCE_MAIN) -D N_PART=100000
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f $(OBJECTS_B) $(OBJECTS_A) $(TARGET_B) $(TARGET_A)
+	rm -f $(OBJECTS_COMMON) $(TARGET_A) $(TARGET_B)
 
-.PHONY: all clean b a
-
+.PHONY: all clean a b
