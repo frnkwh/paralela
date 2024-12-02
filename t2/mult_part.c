@@ -232,7 +232,6 @@ int main(int argc, char *argv[]) {
         // Executa particionamento múltiplas vezes
         long long *tmp_p = p;
         for (int i = 0; i < NTIMES; i++) {
-                printf("%d\n", i);
                 multi_partition(input, n, tmp_p, np, output, pos);
                 tmp_p += np;
         }
