@@ -168,11 +168,12 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
 
 // Função principal
 int main(int argc, char *argv[]) {
-        // Verifica argumentos da linha de comando
-        if (argc != 2) {
-                printf("Usage: %s <num_threads>\n", argv[0]);
+
+        if (argc != 3) {
+                printf("Usage: %s <num_threads> <A|B>\n", argv[0]);
                 return EXIT_FAILURE;
         }
+
 
         // Configura número de threads
         num_threads = atoi(argv[1]);
@@ -180,32 +181,49 @@ int main(int argc, char *argv[]) {
                 printf("Invalid number of threads. Use between 1 and %d.\n", MAX_THREADS);
                 return EXIT_FAILURE;
         }
+        int n_part;
 
-        srand(33);  // Inicializa gerador de números aleatórios
+        // Define o valor de n_part com base no segundo argumento
+        if (argv[2][0] == 'A') {
+                n_part = 1000;
+        } else if (argv[2][0] == 'B') {
+                n_part = 100000;
+        } else {
+                printf("Invalid partition option. Use 'A' or 'B'.\n");
+                return EXIT_FAILURE;
+        }
+
+        srand(33); // Inicializa gerador de números aleatórios
 
         // Aloca memória para os arrays
         long long *input = malloc(sizeof(long long) * INPUT_SIZE);
-        long long *p = malloc(sizeof(long long) * N_PART * CACHE_REPS);
+        long long *p = malloc(sizeof(long long) * n_part * CACHE_REPS);
         long long *output = malloc(sizeof(long long) * INPUT_SIZE);
-        int *pos = malloc(sizeof(int) * N_PART);
+        int *pos = malloc(sizeof(int) * n_part);
+
+        if (!input || !p || !output || !pos) {
+                printf("Memory allocation failed.\n");
+                return EXIT_FAILURE;
+        }
 
         int n = INPUT_SIZE;
-        int np = N_PART;
+        int np = n_part;
 
-        chronometer_t parallelMultiPartitionTime;
 
         // Inicializa arrays com dados aleatórios
         for (int i = 0; i < INPUT_SIZE; i++) input[i] = geraAleatorioLL();
-        for (int i = 0; i < N_PART - 1; i++) p[i] = geraAleatorioLL();
-        p[N_PART - 1] = LLONG_MAX;
+        for (int i = 0; i < n_part - 1; i++) p[i] = geraAleatorioLL();
+        p[n_part - 1] = LLONG_MAX;
 
         // Ordena pontos de partição
-        qsort(p, N_PART, sizeof(long long), cmp_long_long);
+        qsort(p, n_part, sizeof(long long), cmp_long_long);
 
         // Replica pontos de partição para cache
         for (int i = 0; i < CACHE_REPS; i++) {
                 memcpy(p + i * np, p, np * sizeof(*p));
         }
+
+        chronometer_t parallelMultiPartitionTime;
 
         // Mede tempo de execução
         chrono_reset(&parallelMultiPartitionTime);
@@ -214,6 +232,7 @@ int main(int argc, char *argv[]) {
         // Executa particionamento múltiplas vezes
         long long *tmp_p = p;
         for (int i = 0; i < NTIMES; i++) {
+                printf("%d\n", i);
                 multi_partition(input, n, tmp_p, np, output, pos);
                 tmp_p += np;
         }
@@ -222,7 +241,7 @@ int main(int argc, char *argv[]) {
         double total_time_in_seconds = (double)chrono_gettotal(&parallelMultiPartitionTime) / 1e9;
 
         // Verifica resultados e imprime tempo
-        verifica_particoes(input, n, tmp_p, np, output, pos);
+        verifica_particoes(input, n, p, np, output, pos);
         chrono_reportTime(&parallelMultiPartitionTime, "multiPartitionTime");
         printf("%.6f\n", total_time_in_seconds);
 
@@ -231,5 +250,6 @@ int main(int argc, char *argv[]) {
         free(p);
         free(output);
         free(pos);
+
         return 0;
 }

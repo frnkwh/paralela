@@ -1,29 +1,24 @@
+# Configurações
 CC = gcc
 CFLAGS = -Wall -pthread
-SOURCES_COMMON = chrono.c
-SOURCE_MAIN = mult_part.c
+SOURCES = chrono.c mult_part.c
+OBJECTS = $(SOURCES:.c=.o)
+TARGET = multpart
 
-TARGET_A = multpart-1k
-TARGET_B = multpart-100k
+# Regra principal
+all: $(TARGET)
 
-OBJECTS_COMMON = $(SOURCES_COMMON:.c=.o)
+# Compilação do executável
+$(TARGET): $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS)
 
-all: $(TARGET_B) $(TARGET_A)
-
-a: $(TARGET_A)
-
-b: $(TARGET_B)
-
-$(TARGET_A): $(SOURCE_MAIN) $(OBJECTS_COMMON)
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS_COMMON) $(SOURCE_MAIN) -D N_PART=1000
-
-$(TARGET_B): $(SOURCE_MAIN) $(OBJECTS_COMMON)
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS_COMMON) $(SOURCE_MAIN) -D N_PART=100000
-
+# Compilação dos objetos
 %.o: %.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $< -o $@
 
+# Limpeza
 clean:
-	rm -f $(OBJECTS_COMMON) $(TARGET_A) $(TARGET_B)
+	rm -f $(OBJECTS) $(TARGET)
 
-.PHONY: all clean a b
+# Marcando como 'phony'
+.PHONY: all clean
