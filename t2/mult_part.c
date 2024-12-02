@@ -242,7 +242,8 @@ int main(int argc, char *argv[]) {
         // Verifica resultados e imprime tempo
         verifica_particoes(input, n, p, np, output, pos);
         chrono_reportTime(&parallelMultiPartitionTime, "multiPartitionTime");
-        printf("%.6f\n", total_time_in_seconds);
+
+    	printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
 
         // Libera memória alocada
         free(input);

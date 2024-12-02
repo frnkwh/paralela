@@ -1,0 +1,103 @@
+USAGE: ./rodaTodos.sh <A|B>
+/var/spool/slurmd/job13659/slurm_script rodando no host  wz12
+SLURM_JOB_NAME:  roda-todos-slurm.sh
+SLURM_NODELIST:  wz12
+SLURM_JOB_NODELIST:  wz12
+SLURM_JOB_CPUS_PER_NODE:  8
+nt  10
+MAX_EXECS  1
+Executando 10 vezes com B elementos e 1 threads:
+48.769091
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com B elementos e 2 threads:
+29.074720
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com B elementos e 3 threads:
+20.153120
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com B elementos e 4 threads:
+15.160579
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com B elementos e 5 threads:
+12.397259
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com B elementos e 6 threads:
+10.349974
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com B elementos e 7 threads:
+8.948864
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com B elementos e 8 threads:
+7.985375
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+O tempo total dessa shell foi de 158 segundos
+SLURM_JOB_NAME:  roda-todos-slurm.sh
+SLURM_NODELIST:  wz12
+SLURM_JOB_NODELIST:  wz12
+SLURM_JOB_CPUS_PER_NODE:  8
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+             13659     debug roda-tod   nobody  R       2:38      1 wz12

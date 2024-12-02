@@ -1,0 +1,103 @@
+USAGE: ./rodaTodos.sh <A|B>
+/var/spool/slurmd/job13655/slurm_script rodando no host  wz15
+SLURM_JOB_NAME:  roda-todos-slurm.sh
+SLURM_NODELIST:  wz15
+SLURM_JOB_NODELIST:  wz15
+SLURM_JOB_CPUS_PER_NODE:  8
+nt  10
+MAX_EXECS  1
+Executando 10 vezes com A elementos e 1 threads:
+28.299386
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com A elementos e 2 threads:
+17.857332
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com A elementos e 3 threads:
+13.162497
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com A elementos e 4 threads:
+9.951809
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com A elementos e 5 threads:
+8.198109
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com A elementos e 6 threads:
+6.953391
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com A elementos e 7 threads:
+6.006538
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+Executando 10 vezes com A elementos e 8 threads:
+5.394607
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+nao executado
+O tempo total dessa shell foi de 100 segundos
+SLURM_JOB_NAME:  roda-todos-slurm.sh
+SLURM_NODELIST:  wz15
+SLURM_JOB_NODELIST:  wz15
+SLURM_JOB_CPUS_PER_NODE:  8
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+             13655     debug roda-tod   nobody  R       1:40      1 wz15

@@ -1,0 +1,193 @@
+/var/spool/slurmd/job13657/slurm_script rodando no host  wz17
+-----------------------
+Particionamento sem erros
+
+multiPartitionTime deltaT(ns): 28248131660 ns for 1 ops 
+        ==> each op takes 28248131660 ns
+total_time_in_seconds: 28.248132 s
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+Particionamento sem erros
+
+multiPartitionTime deltaT(ns): 18334478330 ns for 1 ops 
+        ==> each op takes 18334478330 ns
+total_time_in_seconds: 18.334478 s
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+Particionamento sem erros
+
+multiPartitionTime deltaT(ns): 13295299193 ns for 1 ops 
+        ==> each op takes 13295299193 ns
+total_time_in_seconds: 13.295299 s
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+Particionamento sem erros
+
+multiPartitionTime deltaT(ns): 9984247348 ns for 1 ops 
+        ==> each op takes 9984247348 ns
+total_time_in_seconds: 9.984247 s
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+Particionamento sem erros
+
+multiPartitionTime deltaT(ns): 8157545379 ns for 1 ops 
+        ==> each op takes 8157545379 ns
+total_time_in_seconds: 8.157545 s
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+Particionamento sem erros
+
+multiPartitionTime deltaT(ns): 6894490115 ns for 1 ops 
+        ==> each op takes 6894490115 ns
+total_time_in_seconds: 6.894490 s
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+Particionamento sem erros
+
+multiPartitionTime deltaT(ns): 6004080469 ns for 1 ops 
+        ==> each op takes 6004080469 ns
+total_time_in_seconds: 6.004080 s
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+Particionamento sem erros
+
+multiPartitionTime deltaT(ns): 5323427192 ns for 1 ops 
+        ==> each op takes 5323427192 ns
+total_time_in_seconds: 5.323427 s
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado
+-----------------------
+nao executado

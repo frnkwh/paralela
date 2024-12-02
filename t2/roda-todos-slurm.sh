@@ -38,7 +38,3 @@ echo "SLURM_JOB_CPUS_PER_NODE: " $SLURM_JOB_CPUS_PER_NODE
 #imprime infos do job slurm (e.g. TEMPO até aqui no fim do job)
 squeue -j $SLURM_JOBID
 
-
-
-
-
