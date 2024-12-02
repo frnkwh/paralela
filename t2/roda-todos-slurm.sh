@@ -1,5 +1,6 @@
 #!/bin/bash
-echo "USAGE: ./rodaTodos.sh <nElements>"
+# O experimento é definido na linha de comando
+echo "USAGE: ./rodaTodos.sh <A|B>"
 echo "$0 rodando no host " `hostname`  
 echo "$0 rodando no host " `hostname` >saida.txt
 
@@ -21,8 +22,7 @@ do
         echo "-----------------------" >>saida.txt
         if [ $j -le $MAX_EXECS ];
         then 
-          ./reduceSumPth $1 $i | tee -a saida.txt | grep -oP '(?<=total_time_in_seconds: )[^ ]*'
-          #./reduceSumPth $1 $i 
+          ./multpart $1 $i | tee -a saida.txt | grep -oP '(?<=total_time_in_seconds: )[^ ]*'
         else
           echo "nao executado" | tee -a saida.txt 
         fi  

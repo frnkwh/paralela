@@ -14,8 +14,8 @@
 
 // Enum para definir o tipo de operação que as threads executarão
 typedef enum {
-        CALCULATE_RANGE_COUNT,  // Calcular quantidade de elementos em cada partição
-        CALCULATE_OUTPUT        // Calcular o array de saída final
+        CONTA_ELEM_PART,  // Calcular quantidade de elementos em cada partição
+        CALC_VETOR_SAIDA        // Calcular o array de saída final
 } Operation;
 
 // Estrutura que contém os dados necessários para cada thread
@@ -94,13 +94,13 @@ void *thread_worker(void *arg) {
         while (1) {
                 pthread_barrier_wait(&thread_barrier);  // Sincroniza todas as threads
 
-                if (data->op == CALCULATE_RANGE_COUNT) {
+                if (data->op == CONTA_ELEM_PART) {
                         // Primeira fase: conta quantos elementos vão para cada partição
                         for (int i = start; i < end; i++) {
                                 int range = binary_search(data->p, data->np, data->input[i]);
                                 __atomic_fetch_add(&data->range_count[range], 1, __ATOMIC_RELAXED);
                         }
-                } else if (data->op == CALCULATE_OUTPUT) {
+                } else if (data->op == CALC_VETOR_SAIDA) {
                         // Segunda fase: coloca os elementos em suas partições finais
                         for (int i = start; i < end; i++) {
                                 int range = binary_search(data->p, data->np, data->input[i]);
@@ -127,14 +127,14 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
                 pthread_barrier_init(&thread_barrier, NULL, num_threads);
 
                 for (int i = 1; i < num_threads; i++) {
-                        thread_data[i] = (ThreadData){i, input, n, p, np, output, pos, range_count, range_index, CALCULATE_RANGE_COUNT};
+                        thread_data[i] = (ThreadData){i, input, n, p, np, output, pos, range_count, range_index, CONTA_ELEM_PART};
                         pthread_create(&threads[i], NULL, thread_worker, &thread_data[i]);
                 }
                 initialized = 1;
         } else {
                 // Atualiza dados das threads nas chamadas subsequentes
                 for (int i = 1; i < num_threads; i++) {
-                        thread_data[i] = (ThreadData){i, input, n, p, np, output, pos, range_count, range_index, CALCULATE_RANGE_COUNT};
+                        thread_data[i] = (ThreadData){i, input, n, p, np, output, pos, range_count, range_index, CONTA_ELEM_PART};
                 }
         }
 
@@ -145,7 +145,7 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
         }
 
         // Configura e executa a thread principal
-        thread_data[0] = (ThreadData){0, input, n, p, np, output, pos, range_count, range_index, CALCULATE_RANGE_COUNT};
+        thread_data[0] = (ThreadData){0, input, n, p, np, output, pos, range_count, range_index, CONTA_ELEM_PART};
         thread_worker(&thread_data[0]);
 
         // Calcula posições iniciais de cada partição
@@ -161,7 +161,7 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
 
         // Configura threads para a fase de saída
         for (int i = 0; i < num_threads; i++) {
-                thread_data[i].op = CALCULATE_OUTPUT;
+                thread_data[i].op = CALC_VETOR_SAIDA;
         }
         thread_worker(&thread_data[0]);
 }
@@ -170,23 +170,23 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
 int main(int argc, char *argv[]) {
 
         if (argc != 3) {
-                printf("Usage: %s <num_threads> <A|B>\n", argv[0]);
+                printf("Usage: %s <A|B> <num_threads>\n", argv[0]);
                 return EXIT_FAILURE;
         }
 
 
         // Configura número de threads
-        num_threads = atoi(argv[1]);
+        num_threads = atoi(argv[2]);
         if (num_threads <= 0 || num_threads > MAX_THREADS) {
                 printf("Invalid number of threads. Use between 1 and %d.\n", MAX_THREADS);
                 return EXIT_FAILURE;
         }
         int n_part;
 
-        // Define o valor de n_part com base no segundo argumento
-        if (argv[2][0] == 'A') {
+        // Define o valor de n_part com base no primeiro argumento
+        if (argv[1][0] == 'A') {
                 n_part = 1000;
-        } else if (argv[2][0] == 'B') {
+        } else if (argv[1][0] == 'B') {
                 n_part = 100000;
         } else {
                 printf("Invalid partition option. Use 'A' or 'B'.\n");
