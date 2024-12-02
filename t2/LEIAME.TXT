@@ -1,0 +1,33 @@
+== Caio Henrique Ramos Rufino e Frank Wolff Hannemann ==
+
+=> Algumas obserervacoes uteis sobre o trabalho:
+
+-> Para compilar basta rodar o makefile, que sera gerado o executavel
+multpart. Esse executavel leva na como argumentos o experimento e o
+numero de threads. Exemplo de execucao:
+
+    ./multpart <A|B> <num_threads>
+
+-> Foi criado um script chamado roda-todos-5-vezes-separado.sh que roda o
+roda-todos-slurm.sh 5 vezes para o experimento que foi passado como
+argumento. Esse script foi criado pois o programa nao ficou rapido o
+suficiente para rodar todos os 5 NEXECS propostos em um unico job do slurm.
+Dessa forma, o roda_todos_slurm.sh so tem MAX_EXECS = 1 e ele eh rodado 5
+vezes por esse script. Exemplo de execucao:
+
+    ./roda-todos-5-vezes-separado.sh A --> para o experimento A
+    ./roda-todos-5-vezes-separado.sh B --> para o experimento B
+
+
+As saidas foram gravadas em arquivos de nome saida_{A|B}-{JOBID}.txt
+e o output do slurm no nome padrao de saida do comando sbatch. Para
+saber qual output do slurm eh da parte A e qual eh da parte B, podemos
+pegar o nome do experimento no arquivo saida_{A|B}-{JOBID}.txt que contem
+o jobid correspondente.
+
+-> Nota sobre o desempenho: durante a implementacao desse programa, fizemos
+todos os testes no meu notebook e tivemos uma performance MUITO superior
+a que conseguimos rodando no cluster, que chegou relativamente perto da
+implementacao do professor. Nao sei ao certo o motivo disso, talvez a
+diferenca de hardware simplesmente. De qualquer forma, as tabelas contem
+os valores das execucoes nesse cluster.
