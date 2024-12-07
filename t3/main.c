@@ -74,8 +74,8 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
                 int curr_pos = binarySearch(P, np, Input[i]);
                 count_p[curr_pos]++;
         }
-        printf("Count_p:\n");
-        imprimeVetorInt(count_p, np);
+        //printf("Count_p:\n");
+        //imprimeVetorInt(count_p, np);
 
         int *insert_pos = malloc(sizeof(int) * np);
 
@@ -86,20 +86,20 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
                 nO[i + 1] = pos;
         }
 
-        printf("nO:\n");
-        imprimeVetorInt(nO, np);
+        //printf("nO:\n");
+        //imprimeVetorInt(nO, np);
 
         for (int i = 0; i < np; i++) {
                 insert_pos[i] = nO[i];
         }
 
-        printf("insert_pos:\n");
-        imprimeVetorInt(insert_pos, np);
+        //printf("insert_pos:\n");
+        //imprimeVetorInt(insert_pos, np);
 
         for (int i = 0; i < n; i++) {
-                imprimeVetorInt(insert_pos, np);
+                //imprimeVetorInt(insert_pos, np);
                 int part = binarySearch(P, np, Input[i]);
-                printf("Inserir %lld em %d\n", Input[i], part);
+                //printf("Inserir %lld em %d\n", Input[i], part);
                 Output[insert_pos[part]++] = Input[i];
         }
 
@@ -154,16 +154,16 @@ int main(int argc, char *argv[]) {
         // Ordenação do vetor de partição
         qsort(P, np, sizeof(long long), cmpLongLong);
 
-        printf("Vetor de partições: \n");
-        imprimeVetorLongLong(P, np);
+        //printf("Vetor de partições: \n");
+        //imprimeVetorLongLong(P, np);
 
-        printf("Vetor input: \n");
-        imprimeVetorLongLong(Input, n);
+        //printf("Vetor input: \n");
+        //imprimeVetorLongLong(Input, n);
 
         multi_partition_mpi(Input, n, P, np, Output, nO);
 
-        printf("Vetor output: \n");
-        imprimeVetorLongLong(Output, n);
+        //printf("Vetor output: \n");
+        //imprimeVetorLongLong(Output, n);
 
         verifica_particoes(Input, n, P, np, Output, nO);
 
