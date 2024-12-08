@@ -66,7 +66,7 @@ void imprimeVetorInt(int *arr, int n) {
 }
 
 void multi_partition_mpi(long long *Input, int n, long long *P, int np, long long *Output, int *nO) {
-        
+
         int *count_p = calloc(np, sizeof(int));
 
         // Conta quantos valores estão em cada faixa
@@ -74,8 +74,6 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
                 int curr_pos = binarySearch(P, np, Input[i]);
                 count_p[curr_pos]++;
         }
-        //printf("Count_p:\n");
-        //imprimeVetorInt(count_p, np);
 
         int *insert_pos = malloc(sizeof(int) * np);
 
@@ -86,23 +84,14 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
                 nO[i + 1] = pos;
         }
 
-        //printf("nO:\n");
-        //imprimeVetorInt(nO, np);
-
         for (int i = 0; i < np; i++) {
                 insert_pos[i] = nO[i];
         }
 
-        //printf("insert_pos:\n");
-        //imprimeVetorInt(insert_pos, np);
-
         for (int i = 0; i < n; i++) {
-                //imprimeVetorInt(insert_pos, np);
                 int part = binarySearch(P, np, Input[i]);
-                //printf("Inserir %lld em %d\n", Input[i], part);
                 Output[insert_pos[part]++] = Input[i];
         }
-
 }
 
 
@@ -119,7 +108,7 @@ int main(int argc, char *argv[]) {
         MPI_Comm_size(MPI_COMM_WORLD, &size);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-        printf("MPI - Processo %d de %d\n", rank, size);
+        //printf("MPI - Processo %d de %d\n", rank, size);
 
         int s = 2024 * 100 + rank;
         srand(s);
@@ -130,9 +119,9 @@ int main(int argc, char *argv[]) {
         int np = nProcMPI;
         int n = nTotalElements / np;
 
-        printf("nTotalElements = %lld\n", nTotalElements);
-        printf("nProcMPI = %d\n", nProcMPI);
-        printf("n = %d\n", n);
+        //printf("nTotalElements = %lld\n", nTotalElements);
+        //printf("nProcMPI = %d\n", nProcMPI);
+        //printf("n = %d\n", n);
 
         // Alocação de memória
         long long *Input = malloc(sizeof(long long) * n);
@@ -154,23 +143,18 @@ int main(int argc, char *argv[]) {
         // Ordenação do vetor de partição
         qsort(P, np, sizeof(long long), cmpLongLong);
 
-        //printf("Vetor de partições: \n");
-        //imprimeVetorLongLong(P, np);
-
-        //printf("Vetor input: \n");
-        //imprimeVetorLongLong(Input, n);
-
         multi_partition_mpi(Input, n, P, np, Output, nO);
-
-        //printf("Vetor output: \n");
-        //imprimeVetorLongLong(Output, n);
-
-        verifica_particoes(Input, n, P, np, Output, nO);
+        //verifica_particoes(Input, n, P, np, Output, nO);
 
         free(Input);
         free(P);
         free(Output);
         free(nO);
+
+        free(sendcounts);
+        free(recvcounts);
+        free(sdispls);
+        free(rdispls);
 
         MPI_Finalize();
 
