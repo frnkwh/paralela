@@ -65,7 +65,40 @@ void imprimeVetorInt(int *arr, int n) {
         printf("\n");
 }
 
-void multi_partition_mpi(long long *Input, int n, long long *P, int np, long long *Output, int *nO, int *count_p) {
+void multi_partition_mpi(int rank, int size, char *argv[]) {
+
+
+                // Input arguments
+        long long nTotalElements = atoll(argv[1]);
+        int nProcMPI = atoi(argv[2]);
+
+        int np = nProcMPI;
+        long long n = nTotalElements / np;
+
+        // Memory allocation
+        long long *Input = malloc(sizeof(long long) * n);
+        long long *P = malloc(sizeof(long long) * np);
+        long long *Output = malloc(sizeof(long long) * n);
+        int *nO = malloc(sizeof(int) * np);   // Starting index of each partition
+        int *count_p = calloc(np, sizeof(int)); // Number of elements in each partition
+        int *recv_count_p = calloc(np * np, sizeof(int));
+
+        // Error checking
+        if (!Input || !P || !Output || !nO || !count_p || !recv_count_p) {
+                printf("Erro ao alocar memória.\n");
+                return;
+        }
+
+        // Populate Input and P with random values
+
+        for (int i = 0; i < n; i++) Input[i] = rand() % 1000;
+        for (int i = 0; i < np - 1; i++) P[i] = rand() % 1000;
+        P[np - 1] = LLONG_MAX;
+
+        // Sort P
+        qsort(P, np, sizeof(long long), cmpLongLong);
+
+
 
 
         // Conta quantos valores estão em cada faixa
@@ -94,56 +127,8 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
         }
 
         free(insert_pos);
-}
 
 
-int main(int argc, char *argv[]) {
-
-        if (argc != 3) {
-                printf("Uso: %s <nTotalElements> <nProcMPI>\n", argv[0]);
-                return EXIT_FAILURE;
-        }
-
-        int rank, size;
-        MPI_Init(&argc, &argv);
-
-        MPI_Comm_size(MPI_COMM_WORLD, &size);
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-        // Input arguments
-        long long nTotalElements = atoll(argv[1]);
-        int nProcMPI = atoi(argv[2]);
-
-        int np = nProcMPI;
-        long long n = nTotalElements / np;
-
-        // Memory allocation
-        long long *Input = malloc(sizeof(long long) * n);
-        long long *P = malloc(sizeof(long long) * np);
-        long long *Output = malloc(sizeof(long long) * n);
-        int *nO = malloc(sizeof(int) * np);   // Starting index of each partition
-        int *count_p = calloc(np, sizeof(int)); // Number of elements in each partition
-        int *recv_count_p = calloc(np * np, sizeof(int));
-
-        // Error checking
-        if (!Input || !P || !Output || !nO || !count_p || !recv_count_p) {
-                printf("Erro ao alocar memória.\n");
-                return EXIT_FAILURE;
-        }
-
-        // Populate Input and P with random values
-        int s = 2024 * 100 + rank;
-        srand(s);
-
-        for (int i = 0; i < n; i++) Input[i] = rand() % 1000;
-        for (int i = 0; i < np - 1; i++) P[i] = rand() % 1000;
-        P[np - 1] = LLONG_MAX;
-
-        // Sort P
-        qsort(P, np, sizeof(long long), cmpLongLong);
-
-        // Perform the partition
-        multi_partition_mpi(Input, n, P, np, Output, nO, count_p);
 
         // Prepare for MPI_Alltoallv
         int *sendcounts = malloc(np * sizeof(int));
@@ -175,6 +160,7 @@ int main(int argc, char *argv[]) {
                       recvbuf, recvcounts, rdispls, MPI_LONG_LONG, MPI_COMM_WORLD);
 
 
+        
         printf("This is process %d:\n", rank);
         printf("Output: ");
         imprimeVetorLongLong(Output, n);
@@ -193,6 +179,8 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
+
+
         // Cleanup
         free(Input);
         free(P);
@@ -205,6 +193,32 @@ int main(int argc, char *argv[]) {
         free(recvcounts);
         free(rdispls);
         free(recvbuf);
+
+}
+
+
+int main(int argc, char *argv[]) {
+
+        if (argc != 3) {
+                printf("Uso: %s <nTotalElements> <nProcMPI>\n", argv[0]);
+                return EXIT_FAILURE;
+        }
+
+
+
+        MPI_Init(&argc, &argv);
+
+        int rank, size;
+
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+
+        int s = 2024 * 100 + rank;
+        srand(s);
+
+        multi_partition_mpi(rank, size, argv);
+
 
         MPI_Finalize();
 
