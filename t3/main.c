@@ -65,9 +65,8 @@ void imprimeVetorInt(int *arr, int n) {
         printf("\n");
 }
 
-void multi_partition_mpi(long long *Input, int n, long long *P, int np, long long *Output, int *nO) {
+void multi_partition_mpi(long long *Input, int n, long long *P, int np, long long *Output, int *nO, int *count_p) {
 
-        int *count_p = calloc(np, sizeof(int));
 
         // Conta quantos valores estão em cada faixa
         for (int i = 0; i < n; i++) {
@@ -76,6 +75,7 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
         }
 
         int *insert_pos = malloc(sizeof(int) * np);
+        //imprimeVetorInt(count_p, np);
 
         nO[0] = 0;
         int pos = 0;
@@ -92,6 +92,8 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
                 int part = binarySearch(P, np, Input[i]);
                 Output[insert_pos[part]++] = Input[i];
         }
+
+        free(insert_pos);
 }
 
 
@@ -108,53 +110,101 @@ int main(int argc, char *argv[]) {
         MPI_Comm_size(MPI_COMM_WORLD, &size);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-        //printf("MPI - Processo %d de %d\n", rank, size);
-
-        int s = 2024 * 100 + rank;
-        srand(s);
-
-        nTotalElements = atoi(argv[1]);
+        // Input arguments
+        long long nTotalElements = atoll(argv[1]);
         int nProcMPI = atoi(argv[2]);
 
         int np = nProcMPI;
-        int n = nTotalElements / np;
+        long long n = nTotalElements / np;
 
-        //printf("nTotalElements = %lld\n", nTotalElements);
-        //printf("nProcMPI = %d\n", nProcMPI);
-        //printf("n = %d\n", n);
-
-        // Alocação de memória
+        // Memory allocation
         long long *Input = malloc(sizeof(long long) * n);
         long long *P = malloc(sizeof(long long) * np);
         long long *Output = malloc(sizeof(long long) * n);
-        int *nO = malloc(sizeof(int) * np);
+        int *nO = malloc(sizeof(int) * np);   // Starting index of each partition
+        int *count_p = calloc(np, sizeof(int)); // Number of elements in each partition
+        int *recv_count_p = calloc(np * np, sizeof(int));
 
-        // Verificação de erro na alocação de memória
-        if (!Input || !P || !Output || !nO) {
+        // Error checking
+        if (!Input || !P || !Output || !nO || !count_p || !recv_count_p) {
                 printf("Erro ao alocar memória.\n");
                 return EXIT_FAILURE;
         }
 
-        // Preenchimento aleatório dos vetores Input e P
-        preencheVetorAleatoriamente(Input, n);
-        preencheVetorAleatoriamente(P, np - 1);
+        // Populate Input and P with random values
+        int s = 2024 * 100 + rank;
+        srand(s);
+
+        for (int i = 0; i < n; i++) Input[i] = rand() % 1000;
+        for (int i = 0; i < np - 1; i++) P[i] = rand() % 1000;
         P[np - 1] = LLONG_MAX;
 
-        // Ordenação do vetor de partição
+        // Sort P
         qsort(P, np, sizeof(long long), cmpLongLong);
 
-        multi_partition_mpi(Input, n, P, np, Output, nO);
-        //verifica_particoes(Input, n, P, np, Output, nO);
+        // Perform the partition
+        multi_partition_mpi(Input, n, P, np, Output, nO, count_p);
 
+        // Prepare for MPI_Alltoallv
+        int *sendcounts = malloc(np * sizeof(int));
+        int *sdispls = malloc(np * sizeof(int));
+        int *recvcounts = malloc(np * sizeof(int));
+        int *rdispls = malloc(np * sizeof(int));
+
+        // Sendcounts and sdispls based on count_p and nO
+        for (int i = 0; i < np; i++) {
+                sendcounts[i] = count_p[i];  // Number of elements to send to process i
+                sdispls[i] = nO[i];          // Start index of partition i in Output
+        }
+
+        // Gather recvcounts for each process
+        MPI_Alltoall(sendcounts, 1, MPI_INT, recvcounts, 1, MPI_INT, MPI_COMM_WORLD);
+
+        // Calculate rdispls and total receive size
+        int total_recv_size = 0;
+        for (int i = 0; i < np; i++) {
+                rdispls[i] = total_recv_size;
+                total_recv_size += recvcounts[i];
+        }
+
+        // Allocate buffer for receiving data
+        long long *recvbuf = malloc(total_recv_size * sizeof(long long));
+
+        // Perform Alltoallv communication
+        MPI_Alltoallv(Output, sendcounts, sdispls, MPI_LONG_LONG,
+                      recvbuf, recvcounts, rdispls, MPI_LONG_LONG, MPI_COMM_WORLD);
+
+
+        printf("This is process %d:\n", rank);
+        printf("Output: ");
+        imprimeVetorLongLong(Output, n);
+        printf("P: ");
+        imprimeVetorLongLong(P, np);
+        printf("Count_P: ");
+        imprimeVetorInt(count_p, np);
+        printf("nO: ");
+        imprimeVetorInt(nO, np);
+        printf("============\n");
+
+        // Print the received data for verification
+        printf("\n\n===>>>> Process %d received:", rank);
+        for (int i = 0; i < total_recv_size; i++) {
+                printf(" %lld", recvbuf[i]);
+        }
+        printf("\n\n");
+
+        // Cleanup
         free(Input);
         free(P);
         free(Output);
         free(nO);
-
+        free(count_p);
+        free(recv_count_p);
         free(sendcounts);
-        free(recvcounts);
         free(sdispls);
+        free(recvcounts);
         free(rdispls);
+        free(recvbuf);
 
         MPI_Finalize();
 
