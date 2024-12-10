@@ -6,6 +6,8 @@
 #include "chrono.h"
 #include "verifica.h"
 
+#define NTIMES 10
+
 long long nTotalElements;
 
 long long geraAleatorioLL() {
@@ -68,8 +70,9 @@ void imprimeVetorInt(int *arr, int n) {
 void multi_partition_mpi(int rank, int size, char *argv[]) {
 
 
-                // Input arguments
-        long long nTotalElements = atoll(argv[1]);
+        // Input arguments
+        nTotalElements = atoll(argv[1]);
+        //printf("nTotalElements = %lld\n", nTotalElements);
         int nProcMPI = atoi(argv[2]);
 
         int np = nProcMPI;
@@ -160,24 +163,24 @@ void multi_partition_mpi(int rank, int size, char *argv[]) {
                       recvbuf, recvcounts, rdispls, MPI_LONG_LONG, MPI_COMM_WORLD);
 
 
-        
-        printf("This is process %d:\n", rank);
-        printf("Output: ");
-        imprimeVetorLongLong(Output, n);
-        printf("P: ");
-        imprimeVetorLongLong(P, np);
-        printf("Count_P: ");
-        imprimeVetorInt(count_p, np);
-        printf("nO: ");
-        imprimeVetorInt(nO, np);
-        printf("============\n");
 
-        // Print the received data for verification
-        printf("\n\n===>>>> Process %d received:", rank);
-        for (int i = 0; i < total_recv_size; i++) {
-                printf(" %lld", recvbuf[i]);
-        }
-        printf("\n\n");
+        //printf("This is process %d:\n", rank);
+        //printf("Output: ");
+        //imprimeVetorLongLong(Output, n);
+        //printf("P: ");
+        //imprimeVetorLongLong(P, np);
+        //printf("Count_P: ");
+        //imprimeVetorInt(count_p, np);
+        //printf("nO: ");
+        //imprimeVetorInt(nO, np);
+        //printf("============\n");
+
+        //// Print the received data for verification
+        //printf("\n\n===>>>> Process %d received:", rank);
+        //for (int i = 0; i < total_recv_size; i++) {
+        //        printf(" %lld", recvbuf[i]);
+        //}
+        //printf("\n\n");
 
 
 
@@ -217,8 +220,27 @@ int main(int argc, char *argv[]) {
         int s = 2024 * 100 + rank;
         srand(s);
 
-        multi_partition_mpi(rank, size, argv);
+        chronometer_t multi_partition_mpi_time;
 
+        chrono_reset(&multi_partition_mpi_time);
+        chrono_start(&multi_partition_mpi_time);
+
+        printf("Chamando multi_partition_mpi %d vezes.\n", NTIMES);
+
+        for (int i = 0; i < NTIMES; i++) {
+                multi_partition_mpi(rank, size, argv);
+        }
+        chrono_stop(&multi_partition_mpi_time);
+        chrono_reportTime(&multi_partition_mpi_time, "multi_partition_mpi_time");
+
+        double total_time_in_seconds = (double) chrono_gettotal(
+                &multi_partition_mpi_time) / ((double)1000*1000*1000);
+        
+        printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+        printf("nTotalElements = %lld\n", nTotalElements);
+
+        double OPS = ((double)nTotalElements * NTIMES)/total_time_in_seconds;
+        printf( "Throughput: %lf OP/s\n", OPS );
 
         MPI_Finalize();
 
