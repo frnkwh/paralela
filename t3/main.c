@@ -67,41 +67,13 @@ void imprimeVetorInt(int *arr, int n) {
         printf("\n");
 }
 
-void multi_partition_mpi(int rank, int size, char *argv[]) {
+void multi_partition_mpi(long long *Input, int n, long long *P, int np, long long *Output, int *nO) {
 
-
-        // Input arguments
-        nTotalElements = atoll(argv[1]);
         //printf("nTotalElements = %lld\n", nTotalElements);
-        int nProcMPI = atoi(argv[2]);
-
-        int np = nProcMPI;
-        long long n = nTotalElements / np;
 
         // Memory allocation
-        long long *Input = malloc(sizeof(long long) * n);
-        long long *P = malloc(sizeof(long long) * np);
-        long long *Output = malloc(sizeof(long long) * n);
-        int *nO = malloc(sizeof(int) * np);   // Starting index of each partition
         int *count_p = calloc(np, sizeof(int)); // Number of elements in each partition
         int *recv_count_p = calloc(np * np, sizeof(int));
-
-        // Error checking
-        if (!Input || !P || !Output || !nO || !count_p || !recv_count_p) {
-                printf("Erro ao alocar memória.\n");
-                return;
-        }
-
-        // Populate Input and P with random values
-
-        for (int i = 0; i < n; i++) Input[i] = rand() % 1000;
-        for (int i = 0; i < np - 1; i++) P[i] = rand() % 1000;
-        P[np - 1] = LLONG_MAX;
-
-        // Sort P
-        qsort(P, np, sizeof(long long), cmpLongLong);
-
-
 
 
         // Conta quantos valores estão em cada faixa
@@ -185,10 +157,6 @@ void multi_partition_mpi(int rank, int size, char *argv[]) {
 
 
         // Cleanup
-        free(Input);
-        free(P);
-        free(Output);
-        free(nO);
         free(count_p);
         free(recv_count_p);
         free(sendcounts);
@@ -208,13 +176,19 @@ int main(int argc, char *argv[]) {
         }
 
 
-
         MPI_Init(&argc, &argv);
 
         int rank, size;
 
         MPI_Comm_size(MPI_COMM_WORLD, &size);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+
+        // Input arguments
+        nTotalElements = atoll(argv[1]);
+
+        int nProcMPI = atoi(argv[2]);
+        int np = nProcMPI;
 
 
         int s = 2024 * 100 + rank;
@@ -227,15 +201,39 @@ int main(int argc, char *argv[]) {
 
         printf("Chamando multi_partition_mpi %d vezes.\n", NTIMES);
 
-        for (int i = 0; i < NTIMES; i++) {
-                multi_partition_mpi(rank, size, argv);
+        long long n = nTotalElements / np;
+        long long *Input = malloc(sizeof(long long) * n);
+        long long *P = malloc(sizeof(long long) * np);
+        long long *Output = malloc(sizeof(long long) * n);
+        int *nO = malloc(sizeof(int) * np);   // Starting index of each partition
+
+        // Error checking
+        if (!Input || !P || !Output || !nO) {
+                printf("Erro ao alocar memória.\n");
+                return EXIT_FAILURE;
         }
+
+        // Populate Input and P with random values
+
+        for (int i = 0; i < n; i++) Input[i] = geraAleatorioLL();
+        for (int i = 0; i < np - 1; i++) P[i] = geraAleatorioLL();
+        P[np - 1] = LLONG_MAX;
+
+        // Sort P
+        qsort(P, np, sizeof(long long), cmpLongLong);
+
+
+        for (int i = 0; i < NTIMES; i++) {
+                multi_partition_mpi(Input, n, P, np, Output, nO);
+        }
+
         chrono_stop(&multi_partition_mpi_time);
         chrono_reportTime(&multi_partition_mpi_time, "multi_partition_mpi_time");
+        verifica_particoes(Input, n, P, np, Output, nO);
 
         double total_time_in_seconds = (double) chrono_gettotal(
                 &multi_partition_mpi_time) / ((double)1000*1000*1000);
-        
+
         printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
         printf("nTotalElements = %lld\n", nTotalElements);
 
@@ -243,6 +241,12 @@ int main(int argc, char *argv[]) {
         printf( "Throughput: %lf OP/s\n", OPS );
 
         MPI_Finalize();
+
+        free(Input);
+        free(P);
+        free(Output);
+        free(nO);
+
 
         return EXIT_SUCCESS;
 }

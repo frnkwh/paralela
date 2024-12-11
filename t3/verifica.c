@@ -2,7 +2,11 @@
 
 // Função que verifica se o particionamento está correto
 // Passando o rank para indicar o processo
-void verifica_particoes(long long *Input, int n, long long *P, int np, long long *Output, int *nO, int rank) {
+void verifica_particoes(long long *Input, int n, long long *P, int np, long long *Output, int *nO) {
+
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
         for (int i = 0; i < np; i++) {
                 int start = nO[i];
                 int end = (i == np - 1) ? n : nO[i + 1];
