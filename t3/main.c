@@ -29,7 +29,6 @@ int cmpLongLong(const void *a, const void *b) {
 }
 
 // Implementação de busca binária para encontrar a partição correta
-/*
 int binarySearch(long long *p, int np, long long value) {
 
         int start = 0, end = np - 1, mid;
@@ -44,7 +43,7 @@ int binarySearch(long long *p, int np, long long value) {
 
         return start;
 }
-*/
+
 void preencheVetorAleatoriamente(long long *arr, int n) {
 
         for (int i = 0; i < n; i ++) {
@@ -69,6 +68,7 @@ void imprimeVetorInt(int *arr, int n) {
 }
 
 void multi_partition_mpi(long long *Input, int n, long long *P, int np, long long *Output, int *nO) {
+
 
         // Memory allocation
         int *count_p = calloc(np, sizeof(int)); // Number of elements in each partition
@@ -137,22 +137,22 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
         int rank;
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-        printf("This is process %d:\n", rank);
-        printf("Output: ");
-        imprimeVetorLongLong(Output, n);
-        printf("P: ");
-        imprimeVetorLongLong(P, np);
-        printf("Count_P: ");
-        imprimeVetorInt(count_p, np);
-        printf("nO: %d", *nO);
-        printf("============\n");
+        //printf("This is process %d:\n", rank);
+        //printf("Output: ");
+        //imprimeVetorLongLong(Output, n);
+        //printf("P: ");
+        //imprimeVetorLongLong(P, np);
+        //printf("Count_P: ");
+        //imprimeVetorInt(count_p, np);
+        //printf("nO: %d", *nO);
+        //printf("============\n");
 
-        // Print the received data for verification
-        printf("\n\n===>>>> Process %d received:", rank);
-        for (int i = 0; i < total_recv_size; i++) {
-                printf(" %lld", recvbuf[i]);
-        }
-        printf("\n\n");
+        //// Print the received data for verification
+        //printf("\n\n===>>>> Process %d received:", rank);
+        //for (int i = 0; i < total_recv_size; i++) {
+        //        printf(" %lld", recvbuf[i]);
+        //}
+        //printf("\n\n");
 
 
         // Cleanup
@@ -250,17 +250,17 @@ int main(int argc, char *argv[]) {
         }
 
         chrono_stop(&multi_partition_mpi_time);
-        //chrono_reportTime(&multi_partition_mpi_time, "multi_partition_mpi_time");
+        chrono_reportTime(&multi_partition_mpi_time, "multi_partition_mpi_time");
 
         verifica_particoes(Input, n, P, np, Output, &nO);
 
-        //double total_time_in_seconds = (double) chrono_gettotal(&multi_partition_mpi_time) / ((double)1000*1000*1000);
+        double total_time_in_seconds = (double) chrono_gettotal(&multi_partition_mpi_time) / ((double)1000*1000*1000);
 
-        //printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
-        //printf("nTotalElements = %lld\n", nTotalElements);
+        printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+        printf("nTotalElements = %lld\n", nTotalElements);
 
-        //double OPS = ((double)nTotalElements * NTIMES) / total_time_in_seconds;
-        //printf("Throughput: %lf OP/s\n", OPS);
+        double OPS = ((double)nTotalElements * NTIMES) / total_time_in_seconds;
+        printf("Throughput: %lf OP/s\n", OPS);
 
         MPI_Finalize();
 
