@@ -6,7 +6,7 @@
 #include "chrono.h"
 #include "verifica.h"
 
-#define NTIMES 1
+#define NTIMES 10
 
 long long nTotalElements;
 
