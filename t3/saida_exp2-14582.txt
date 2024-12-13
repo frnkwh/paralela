@@ -1,1 +1,0 @@
-/var/spool/slurmd/job14582/slurm_script rodando no host  wz11
