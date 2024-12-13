@@ -29,6 +29,7 @@ int cmpLongLong(const void *a, const void *b) {
 }
 
 // Implementação de busca binária para encontrar a partição correta
+/*
 int binarySearch(long long *p, int np, long long value) {
 
         int start = 0, end = np - 1, mid;
@@ -43,7 +44,7 @@ int binarySearch(long long *p, int np, long long value) {
 
         return start;
 }
-
+*/
 void preencheVetorAleatoriamente(long long *arr, int n) {
 
         for (int i = 0; i < n; i ++) {
@@ -163,7 +164,6 @@ void multi_partition_mpi(long long *Input, int n, long long *P, int np, long lon
         free(rdispls);
         free(recvbuf);
 }
-
 
 int main(int argc, char *argv[]) {
 
