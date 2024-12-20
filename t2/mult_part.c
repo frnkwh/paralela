@@ -1,3 +1,4 @@
+// Caio Henrique Ramos Rufino e Frank Wolff Hannemann
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,6 +6,7 @@
 #include <pthread.h>
 #include <stdatomic.h>
 #include "chrono.h"
+#include "verifica.h"
 
 // Definição de constantes do programa
 #define INPUT_SIZE 8000000    // Tamanho do array de entrada
@@ -28,7 +30,8 @@ typedef struct {
         long long *output;      // Array de saída
         int *pos;              // Posições iniciais de cada partição
         int *range_count;      // Contador de elementos em cada partição
-        atomic_int *range_index; // Índices atômicos para inserção paralela
+        int *range_index; // Índices atômicos para inserção paralela
+        int *range_temp;
         Operation op;           // Tipo de operação a ser realizada
 } ThreadData;
 
@@ -66,22 +69,6 @@ int binary_search(long long *p, int np, long long value) {
         return start;
 }
 
-// Função que verifica se o particionamento está correto
-void verifica_particoes(long long *input, int n, long long *p, int np, long long *output, int *pos) {
-        for (int i = 0; i < np; i++) {
-                int start = pos[i];
-                int end = (i == np - 1) ? n : pos[i + 1];
-                for (int j = start; j < end; j++) {
-                        // Verifica se cada elemento está na partição correta
-                        if ((i == 0 && output[j] >= p[i]) || (i > 0 && (output[j] < p[i - 1] || output[j] >= p[i]))) {
-                                printf("Erro: Elemento %lld na posição %d fora da faixa [%lld, %lld)\n", output[j], j, (i > 0 ? p[i - 1] : 0), p[i]);
-                                return;
-                        }
-                }
-        }
-        printf("Particionamento sem erros\n");
-}
-
 // Função executada por cada thread
 void *thread_worker(void *arg) {
         ThreadData *data = (ThreadData *)arg;
@@ -93,25 +80,55 @@ void *thread_worker(void *arg) {
 
         while (1) {
                 pthread_barrier_wait(&thread_barrier);  // Sincroniza todas as threads
-
+                
                 if (data->op == CONTA_ELEM_PART) {
+                        int *local_range_count = (int *)calloc(data->np, sizeof(int));
                         // Primeira fase: conta quantos elementos vão para cada partição
+                        // Realizado localmente
                         for (int i = start; i < end; i++) {
                                 int range = binary_search(data->p, data->np, data->input[i]);
-                                __atomic_fetch_add(&data->range_count[range], 1, __ATOMIC_RELAXED);
+                                local_range_count[range]++;
+                                data->range_temp[i] = range;
                         }
+                        // Sincronização após o cáluclo local, evita atômicos
+                        for (int i = 0; i < data->np; i++) {
+                                __sync_fetch_and_add(&data->range_count[i], local_range_count[i]);
+                        }
+                        free(local_range_count);
+
                 } else if (data->op == CALC_VETOR_SAIDA) {
+                        int *local_range_index = (int *)calloc(data->np, sizeof(int));
                         // Segunda fase: coloca os elementos em suas partições finais
+
                         for (int i = start; i < end; i++) {
-                                int range = binary_search(data->p, data->np, data->input[i]);
-                                int index = atomic_fetch_add(&data->range_index[range], 1);
+                                // Reutiliza o vetor calculado anteriormente
+                                int range = data->range_temp[i];
+                                local_range_index[range]++;
+                        }
+
+                        // Sincromnização
+                        for (int range = 0; range < data->np; range++) {
+                             if (local_range_index[range] > 0) {
+                                local_range_index[range] = __sync_fetch_and_add(&data->range_index[range], local_range_index[range]);
+                             }
+                        }
+                        for (int i = start; i < end; i++) {
+                                // Reutiliza o vetor calculado anteriormente
+                                int range = data->range_temp[i];
+                                int index = local_range_index[range]++;
                                 data->output[index] = data->input[i];
                         }
+                        free(local_range_index);
                 }
-
-                pthread_barrier_wait(&thread_barrier);  // Sincroniza novamente
-                if (data->thread_id == 0) return NULL;
+                pthread_barrier_wait(&thread_barrier);
+                if (data->thread_id == 0) {
+                        return NULL;
+                }
         }
+        if (data->thread_id != 0) {
+                pthread_exit(NULL);
+        }
+
         return NULL;
 }
 
@@ -119,44 +136,35 @@ void *thread_worker(void *arg) {
 void multi_partition(long long *input, int n, long long *p, int np, long long *output, int *pos) {
         static int initialized = 0;
 
-        int range_count[np];          // Contador de elementos por partição
-        atomic_int range_index[np];   // Índices atômicos para inserção paralela
+        int *range_count = (int *)calloc(np, sizeof(int));
+        int *range_index = (int *)calloc(np, sizeof(int));
+        int *range_temp = (int *)malloc(n * sizeof(int));
 
         // Inicializa as threads apenas na primeira chamada
         if (!initialized) {
                 pthread_barrier_init(&thread_barrier, NULL, num_threads);
 
                 for (int i = 1; i < num_threads; i++) {
-                        thread_data[i] = (ThreadData){i, input, n, p, np, output, pos, range_count, range_index, CONTA_ELEM_PART};
+                        thread_data[i] = (ThreadData){i, input, n, p, np, output, pos, range_count, range_index, range_temp, CONTA_ELEM_PART};
                         pthread_create(&threads[i], NULL, thread_worker, &thread_data[i]);
                 }
                 initialized = 1;
         } else {
                 // Atualiza dados das threads nas chamadas subsequentes
                 for (int i = 1; i < num_threads; i++) {
-                        thread_data[i] = (ThreadData){i, input, n, p, np, output, pos, range_count, range_index, CONTA_ELEM_PART};
+                        thread_data[i] = (ThreadData){i, input, n, p, np, output, pos, range_count, range_index, range_temp, CONTA_ELEM_PART};
                 }
         }
 
-        // Inicializa contadores
-        for (int i = 0; i < np; i++) {
-                range_count[i] = 0;
-                atomic_init(&range_index[i], 0);
-        }
-
         // Configura e executa a thread principal
-        thread_data[0] = (ThreadData){0, input, n, p, np, output, pos, range_count, range_index, CONTA_ELEM_PART};
+        thread_data[0] = (ThreadData){0, input, n, p, np, output, pos, range_count, range_index, range_temp, CONTA_ELEM_PART};
         thread_worker(&thread_data[0]);
 
         // Calcula posições iniciais de cada partição
         pos[0] = 0;
         for (int i = 1; i < np; i++) {
                 pos[i] = pos[i - 1] + range_count[i - 1];
-        }
-
-        // Inicializa índices para a fase de saída
-        for (int i = 0; i < np; i++) {
-                atomic_store(&range_index[i], pos[i]);
+                range_index[i] = pos[i];
         }
 
         // Configura threads para a fase de saída
@@ -164,6 +172,10 @@ void multi_partition(long long *input, int n, long long *p, int np, long long *o
                 thread_data[i].op = CALC_VETOR_SAIDA;
         }
         thread_worker(&thread_data[0]);
+
+        free(range_count);
+        free(range_index);
+        free(range_temp);
 }
 
 // Função principal
@@ -243,7 +255,10 @@ int main(int argc, char *argv[]) {
         verifica_particoes(input, n, p, np, output, pos);
         chrono_reportTime(&parallelMultiPartitionTime, "multiPartitionTime");
 
-    	printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+        printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+
+        double MEPS = ((double)n * NTIMES) / (total_time_in_seconds * 1000 * 1000);
+        printf("Throughput: %lf MEPS/s\n", MEPS);
 
         // Libera memória alocada
         free(input);
